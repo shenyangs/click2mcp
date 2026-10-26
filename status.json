@@ -1,0 +1,78 @@
+{
+  "project": "click2mcp",
+  "state": "PASS",
+  "scenario": "Record four real browser events on the bundled task form, validate a recipe, discover submit_demo_task through MCP SDK listTools, invoke through callTool in a fresh browser, and verify the returned receipt against submitted data.",
+  "checks": [
+    {
+      "id": "typescript-and-vite-build",
+      "passed": true,
+      "evidence": "artifacts/build.log"
+    },
+    {
+      "id": "strict-allowlist-unit-tests-9",
+      "passed": true,
+      "evidence": "artifacts/test.log"
+    },
+    {
+      "id": "sdk-integration-and-ui-e2e-3",
+      "passed": true,
+      "evidence": "artifacts/e2e.log"
+    },
+    {
+      "id": "recorded-demo-and-receipt-assertion",
+      "passed": true,
+      "evidence": "artifacts/demo.log"
+    },
+    {
+      "id": "actual-screenshot",
+      "passed": true,
+      "evidence": "artifacts/demo.png"
+    },
+    {
+      "id": "actual-playwright-video",
+      "passed": true,
+      "evidence": "artifacts/playwright/demo-record-\u2192-generate-\u2192-invoke-real-MCP-demo/video.webm"
+    }
+  ],
+  "commands": [
+    {
+      "cmd": "npm install --cache .cache/npm",
+      "exitCode": 0
+    },
+    {
+      "cmd": "npm run build",
+      "exitCode": 0
+    },
+    {
+      "cmd": "npm run test",
+      "exitCode": 0
+    },
+    {
+      "cmd": "npm run e2e (initial: missing FFmpeg; artifacts/e2e-first-attempt.log)",
+      "exitCode": 1
+    },
+    {
+      "cmd": "npm run e2e (second: assertion timeout; artifacts/e2e-second-attempt.log)",
+      "exitCode": 1
+    },
+    {
+      "cmd": "npm run e2e",
+      "exitCode": 0
+    },
+    {
+      "cmd": "npm run demo",
+      "exitCode": 0
+    }
+  ],
+  "liveModel": false,
+  "fixturesUsed": true,
+  "demoVideo": "artifacts/playwright/demo-record-\u2192-generate-\u2192-invoke-real-MCP-demo/video.webm",
+  "limitations": [
+    "No model inference; deterministic recipe generation only.",
+    "One bundled local fixture and one tool; no arbitrary-site recording.",
+    "Single in-memory recording session; no concurrency or durable persistence.",
+    "Dashboard controls drive the managed browser; no desktop browser extension.",
+    "macOS verified using read-only existing Chromium cache; clean-install Linux and Windows execution not verified.",
+    "Optional LLM description generation is not implemented."
+  ]
+}

@@ -1,4 +1,23 @@
 import express from 'express';
-const app = express(); app.use(express.json({limit:'512kb'}));
-app.get('/api/health', (_req,res) => res.json({ ok: true, project: 'click2mcp' }));
-app.listen(5208, '127.0.0.1', () => console.log('[click2mcp] api ready on 5208'));
+import { randomUUID } from 'node:crypto';
+import { resolve } from 'node:path';
+import { chromium, type Browser, type Page } from '@playwright/test';
+import { z } from 'zod';
+import { actionSchema,recipeSchema,act,protect,browserOptions,origin,type Action } from './core.js';
+import { invoke } from './client.js';
+const app=express();app.use(express.json({limit:'32kb'}));
+app.use((req,res,next)=>{if(!['127.0.0.1:5208','127.0.0.1:4208'].includes(req.headers.host||'')){res.status(403).json({error:'Unapproved host'});return;}const o=req.headers.origin;if(o && !['http://127.0.0.1:4208',origin].includes(o)){res.status(403).json({error:'Unapproved origin'});return;}next();});
+app.get('/api/health',(_q,s)=>s.json({ok:true,project:'click2mcp'}));
+app.get('/fixture',(_q,s)=>s.sendFile(resolve('fixtures/demo-form/index.html')));
+const receipts=new Map<string,unknown>();
+app.post('/fixture/submit',(q,s)=>{const input=z.object({taskName:z.string().min(1).max(120),category:z.enum(['Engineering','Design','Research'])}).strict().parse(q.body);const receipt=`TASK-${randomUUID().slice(0,8).toUpperCase()}`;if(receipts.size>100)receipts.clear();receipts.set(receipt,input);s.json({receipt,...input});});
+app.get('/api/receipt/:id',(q,s)=>{const r=receipts.get(q.params.id);s.status(r?200:404).json(r||{error:'Unknown receipt'});});
+let browser:Browser|undefined,page:Page|undefined,events:Action[]=[],recipe:Action[]|undefined,busy=false;
+async function snapshot(){return {events,recording:!!page,image:page?(await page.screenshot()).toString('base64'):null};}
+app.post('/api/start',async(_q,s)=>{if(browser)await browser.close();browser=await chromium.launch(browserOptions());page=await browser.newPage({viewport:{width:620,height:530}});await protect(page);events=[];recipe=undefined;await page.exposeBinding('capture',(_source,event)=>{const a=actionSchema.safeParse(event);if(!a.success)return;const last=events[events.length-1];if(last?.type===a.data.type && ['fill','selectOption'].includes(a.data.type))events[events.length-1]=a.data;else if(events.length<16)events.push(a.data);});await page.addInitScript(()=>{const capture=(window as unknown as {capture:(a:unknown)=>void}).capture;document.addEventListener('input',e=>{const t=e.target as HTMLInputElement;if(t.dataset.testid==='task-name')capture({type:'fill',selector:'[data-testid="task-name"]',value:t.value});});document.addEventListener('change',e=>{const t=e.target as HTMLSelectElement;if(t.dataset.testid==='category')capture({type:'selectOption',selector:'[data-testid="category"]',value:t.value});});document.addEventListener('click',e=>{const t=e.target as HTMLElement;if(t.dataset.testid==='submit')capture({type:'click',selector:'[data-testid="submit"]'});});});await act(page,{type:'goto',url:`${origin}/fixture`});events.push({type:'goto',url:`${origin}/fixture`});s.json(await snapshot());});
+app.post('/api/action',async(q,s)=>{if(!page)throw new Error('Start recording first');const a=actionSchema.parse(q.body);if(a.type==='goto')throw new Error('Navigation is managed');await act(page,a);if(a.type==='click')await page.locator('[data-testid="receipt"]').waitFor();s.json(await snapshot());});
+app.post('/api/generate',async(_q,s)=>{recipe=recipeSchema.parse(events);const data={name:'submit_demo_task',inputSchema:{type:'object',properties:{taskName:{type:'string',minLength:1,maxLength:120}},required:['taskName'],additionalProperties:false},recipe};s.json(data);});
+app.post('/api/test',async(q,s)=>{if(!recipe)throw new Error('Generate a valid recipe first');if(busy)throw new Error('Tool is already running');busy=true;try{s.json(await invoke(recipe,z.string().min(1).max(120).parse(q.body.taskName)));}finally{busy=false;}});
+app.use((err:Error,_q:express.Request,s:express.Response,_n:express.NextFunction)=>s.status(400).json({error:err.message}));
+app.listen(5208,'127.0.0.1',()=>console.log('Click2MCP API on 5208'));
+process.on('SIGTERM',async()=>{await browser?.close();process.exit(0);});
