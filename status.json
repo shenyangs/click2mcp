@@ -1,43 +1,76 @@
 {
   "project": "click2mcp",
   "state": "PASS",
-  "scenario": "Record four real browser events on the bundled task form, validate a recipe, discover submit_demo_task through MCP SDK listTools, invoke through callTool in a fresh browser, and verify the returned receipt against submitted data.",
+  "scenario": "中文界面录制四个真实浏览器事件，校验配方，通过 MCP SDK 发现和调用工具，断言中文任务的实际回执；同时验证小屏、键盘和失败反馈。",
   "checks": [
     {
       "id": "typescript-and-vite-build",
       "passed": true,
-      "evidence": "artifacts/build.log"
+      "evidence": "artifacts/build-zh.log"
     },
     {
       "id": "strict-allowlist-unit-tests-9",
       "passed": true,
-      "evidence": "artifacts/test.log"
+      "evidence": "artifacts/test-zh.log"
     },
     {
-      "id": "sdk-integration-and-ui-e2e-3",
+      "id": "sdk-ui-accessibility-e2e-4",
       "passed": true,
-      "evidence": "artifacts/e2e.log"
+      "evidence": "artifacts/e2e-zh.log"
     },
     {
-      "id": "recorded-demo-and-receipt-assertion",
+      "id": "chinese-recorded-demo",
       "passed": true,
-      "evidence": "artifacts/demo.log"
+      "evidence": "artifacts/demo-zh.log"
     },
     {
-      "id": "actual-screenshot",
+      "id": "chinese-desktop-screenshot",
       "passed": true,
       "evidence": "artifacts/demo.png"
     },
     {
-      "id": "actual-playwright-video",
+      "id": "chinese-mobile-screenshot",
       "passed": true,
-      "evidence": "artifacts/playwright/demo-record-\u2192-generate-\u2192-invoke-real-MCP-demo/video.webm"
+      "evidence": "artifacts/mobile-zh.png"
+    },
+    {
+      "id": "real-demo-video",
+      "passed": true,
+      "evidence": "artifacts/playwright/demo-record-→-generate-→-invoke-real-MCP-demo/video.webm"
+    },
+    {
+      "id": "setup-reuse-existing-browser",
+      "passed": true,
+      "evidence": "artifacts/setup-zh.log"
+    },
+    {
+      "id": "doctor-environment",
+      "passed": true,
+      "evidence": "artifacts/doctor-zh.log"
+    },
+    {
+      "id": "doctor-missing-dependencies-expected-exit-1",
+      "passed": true,
+      "evidence": "artifacts/doctor-missing-zh.log"
+    },
+    {
+      "id": "lockfile-consistency",
+      "passed": true,
+      "evidence": "artifacts/lock-consistency-zh.log"
     }
   ],
   "commands": [
     {
-      "cmd": "npm install --cache .cache/npm",
+      "cmd": "npm run setup",
       "exitCode": 0
+    },
+    {
+      "cmd": "npm run doctor",
+      "exitCode": 0
+    },
+    {
+      "cmd": "node scripts/doctor.mjs（隔离缺依赖目录，预期失败）",
+      "exitCode": 1
     },
     {
       "cmd": "npm run build",
@@ -48,15 +81,11 @@
       "exitCode": 0
     },
     {
-      "cmd": "npm run e2e (initial: missing FFmpeg; artifacts/e2e-first-attempt.log)",
+      "cmd": "npm run e2e（中文复跑出现超时，见 artifacts/e2e-zh-timeout.log）",
       "exitCode": 1
     },
     {
-      "cmd": "npm run e2e (second: assertion timeout; artifacts/e2e-second-attempt.log)",
-      "exitCode": 1
-    },
-    {
-      "cmd": "npm run e2e",
+      "cmd": "npm run e2e（保持原断言重跑）",
       "exitCode": 0
     },
     {
@@ -66,13 +95,13 @@
   ],
   "liveModel": false,
   "fixturesUsed": true,
-  "demoVideo": "artifacts/playwright/demo-record-\u2192-generate-\u2192-invoke-real-MCP-demo/video.webm",
+  "demoVideo": "artifacts/playwright/demo-record-→-generate-→-invoke-real-MCP-demo/video.webm",
   "limitations": [
-    "No model inference; deterministic recipe generation only.",
-    "One bundled local fixture and one tool; no arbitrary-site recording.",
-    "Single in-memory recording session; no concurrency or durable persistence.",
-    "Dashboard controls drive the managed browser; no desktop browser extension.",
-    "macOS verified using read-only existing Chromium cache; clean-install Linux and Windows execution not verified.",
-    "Optional LLM description generation is not implemented."
+    "没有模型推理，只进行确定性配方生成；示例站点为内置 fixture，执行与回执真实。",
+    "仅支持单个本地站点、一个工具、一个内存会话，无持久化或多用户支持。",
+    "面板控制受控浏览器，不是任意桌面浏览器扩展。",
+    "macOS 已验证；setup 复用现有依赖缓存和 Chromium，全新机器从零下载浏览器及 Windows/Linux 实际运行尚未验证。",
+    "中文复跑曾出现一次 MCP 回执等待超过 20 秒；相同断言重跑通过，偶发超时根因尚未定位。",
+    "可选模型描述建议未实现。"
   ]
 }
