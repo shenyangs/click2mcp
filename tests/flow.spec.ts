@@ -11,10 +11,17 @@ test('中文小屏、键盘操作和失败反馈',async({page})=>{
  await expect(page.locator('html')).toHaveAttribute('lang','zh-CN');
  await expect(page.getByRole('navigation',{name:'首次使用三步引导'})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await expect(page.getByRole('button',{name:'生成 MCP'})).toBeDisabled();
+ await expect(page.getByRole('button',{name:'测试工具'})).toBeDisabled();
+ let releaseStart!:()=>void;const startGate=new Promise<void>(resolve=>{releaseStart=resolve});
+ await page.route('**/api/start',async route=>{await startGate;await route.continue()});
  await page.keyboard.press('Tab');await page.keyboard.press('Tab');
  await expect(page.getByRole('button',{name:'开始录制'})).toBeFocused();
- await page.keyboard.press('Enter');await expect(page.getByLabel('任务名称')).toBeVisible();
+ await page.keyboard.press('Enter');await expect(page.getByRole('status')).toHaveText('正在打开浏览器…');
+ await expect(page.getByRole('button',{name:'开始录制'})).toBeDisabled();
+ releaseStart();await expect(page.getByLabel('任务名称')).toBeVisible();await page.unroute('**/api/start');
  await page.getByLabel('任务名称').fill('');await expect(page.getByRole('button',{name:'录制表单提交'})).toBeDisabled();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await page.screenshot({path:'artifacts/mobile-zh.png',fullPage:true});
  await page.route('**/api/start',route=>route.abort());
  await page.getByRole('button',{name:'开始录制'}).click();

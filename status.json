@@ -1,76 +1,58 @@
 {
   "project": "click2mcp",
   "state": "PASS",
-  "scenario": "中文界面录制四个真实浏览器事件，校验配方，通过 MCP SDK 发现和调用工具，断言中文任务的实际回执；同时验证小屏、键盘和失败反馈。",
+  "scenario": "浅色草绿流程录制器：真实浏览器预览、四步时间线、右侧 MCP 配方与真实调用回执；验证 1440px 桌面、390px 小屏、键盘、加载、空状态和网络失败恢复。",
   "checks": [
+    {
+      "id": "doctor-environment",
+      "passed": true,
+      "evidence": "artifacts/doctor-redesign.log"
+    },
     {
       "id": "typescript-and-vite-build",
       "passed": true,
-      "evidence": "artifacts/build-zh.log"
+      "evidence": "artifacts/build-redesign.log"
     },
     {
       "id": "strict-allowlist-unit-tests-9",
       "passed": true,
-      "evidence": "artifacts/test-zh.log"
+      "evidence": "artifacts/test-redesign.log"
     },
     {
       "id": "sdk-ui-accessibility-e2e-4",
       "passed": true,
-      "evidence": "artifacts/e2e-zh.log"
+      "evidence": "artifacts/e2e-redesign.log"
     },
     {
-      "id": "chinese-recorded-demo",
+      "id": "real-mcp-demo",
       "passed": true,
-      "evidence": "artifacts/demo-zh.log"
+      "evidence": "artifacts/demo-redesign.log"
     },
     {
-      "id": "chinese-desktop-screenshot",
+      "id": "committed-empty-screenshot",
       "passed": true,
-      "evidence": "artifacts/demo.png"
+      "evidence": "docs/images/recorder-empty.png"
     },
     {
-      "id": "chinese-mobile-screenshot",
+      "id": "committed-success-screenshot",
+      "passed": true,
+      "evidence": "docs/images/recorder-success.png"
+    },
+    {
+      "id": "mobile-390-no-overflow",
       "passed": true,
       "evidence": "artifacts/mobile-zh.png"
     },
     {
-      "id": "real-demo-video",
+      "id": "video-visual-inspection",
       "passed": true,
-      "evidence": "artifacts/playwright/demo-record-→-generate-→-invoke-real-MCP-demo/video.webm"
-    },
-    {
-      "id": "setup-reuse-existing-browser",
-      "passed": true,
-      "evidence": "artifacts/setup-zh.log"
-    },
-    {
-      "id": "doctor-environment",
-      "passed": true,
-      "evidence": "artifacts/doctor-zh.log"
-    },
-    {
-      "id": "doctor-missing-dependencies-expected-exit-1",
-      "passed": true,
-      "evidence": "artifacts/doctor-missing-zh.log"
-    },
-    {
-      "id": "lockfile-consistency",
-      "passed": true,
-      "evidence": "artifacts/lock-consistency-zh.log"
+      "evidence": "artifacts/demo-contact-sheet.png"
     }
   ],
   "commands": [
     {
-      "cmd": "npm run setup",
-      "exitCode": 0
-    },
-    {
       "cmd": "npm run doctor",
       "exitCode": 0
-    },
-    {
-      "cmd": "node scripts/doctor.mjs（隔离缺依赖目录，预期失败）",
-      "exitCode": 1
     },
     {
       "cmd": "npm run build",
@@ -81,11 +63,7 @@
       "exitCode": 0
     },
     {
-      "cmd": "npm run e2e（中文复跑出现超时，见 artifacts/e2e-zh-timeout.log）",
-      "exitCode": 1
-    },
-    {
-      "cmd": "npm run e2e（保持原断言重跑）",
+      "cmd": "npm run e2e",
       "exitCode": 0
     },
     {
